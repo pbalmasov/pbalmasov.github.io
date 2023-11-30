@@ -104,31 +104,32 @@ function App() {
         return (<ul style={{display: 'flex', alignItems: 'center'}}>
             {colors.map((color, index) =>
                 <li key={index} style={{margin: 15, listStyle: 'none'}}>
-                    <label>
-                        <button style={{
-                            display: 'block',
-                            margin: '5px auto',
-                            width: 20,
-                            height: 20,
-                            borderRadius: "50%",
-                            color: 'white',
-                            background: 'black',
-                            border: 'none',
-                            visibility: isInput && index >= 2 ? 'visible' : 'hidden'
-                        }} onClick={() => {
-                            const state = [...colors];
-                            const [item] = state.splice(index, 1);
-                            if (item.active) {
-                                if (state[index - 1].active)
-                                    state[index - 2].active = true
-                                else
-                                    state[index - 1].active = true;
-                            }
-                            updateActiveColors(colors, a);
-                            setColors(state);
+
+                    <button style={{
+                        display: 'block',
+                        margin: '5px auto',
+                        width: 20,
+                        height: 20,
+                        borderRadius: "50%",
+                        color: 'white',
+                        background: 'black',
+                        border: 'none',
+                        visibility: isInput && index >= 2 ? 'visible' : 'hidden'
+                    }} onClick={() => {
+                        const state = [...colors];
+                        const [item] = state.splice(index, 1);
+                        if (item.active) {
+                            if (state[index - 1].active)
+                                state[index - 2].active = true
+                            else
+                                state[index - 1].active = true;
                         }
-                        }>X
-                        </button>
+                        updateActiveColors(colors, a);
+                        setColors(state);
+                    }
+                    }>X
+                    </button>
+                    <label>
                         <div style={{
                             backgroundColor: toRGBAString(color),
                             display: 'block',
