@@ -23,11 +23,11 @@ function getDiffColor(a, b) {
 }
 
 function updateActiveColors(colors, col) {
-    colors.forEach(c => {
-        c.active = false;
-        c.diff = getDiffColor(toRGBA(col), toRGBA(c));
-    });
     if (col) {
+        colors.forEach(c => {
+            c.active = false;
+            c.diff = getDiffColor(toRGBA(col), toRGBA(c));
+        });
         const diffs = colors.map(c => getDiffColor(toRGBA(col), toRGBA(c)));
         const min1 = Math.min(...diffs);
         const min2 = Math.min(...diffs.filter(item => item !== min1));
@@ -100,18 +100,42 @@ function App() {
 
     const canvas = useRef();
 
-    function drawColors(colors, isInput) {
-        return (<ul style={{display: 'flex'}}>
+    function drawColors(colors, isInput, a) {
+        return (<ul style={{display: 'flex', alignItems: 'center'}}>
             {colors.map((color, index) =>
                 <li key={index} style={{margin: 15, listStyle: 'none'}}>
                     <label>
+                        <button style={{
+                            display: 'block',
+                            margin: '5px auto',
+                            width: 20,
+                            height: 20,
+                            borderRadius: "50%",
+                            color: 'white',
+                            background: 'black',
+                            border: 'none',
+                            visibility: isInput && index >= 2 ? 'visible' : 'hidden'
+                        }} onClick={() => {
+                            const state = [...colors];
+                            const [item] = state.splice(index, 1);
+                            if (item.active) {
+                                if (state[index - 1].active)
+                                    state[index - 2].active = true
+                                else
+                                    state[index - 1].active = true;
+                            }
+                            updateActiveColors(colors, a);
+                            setColors(state);
+                        }
+                        }>X
+                        </button>
                         <div style={{
                             backgroundColor: toRGBAString(color),
                             display: 'block',
                             borderRadius: '50%',
                             width: 50,
                             height: 50,
-                            border: color.active ?'solid 4px green':'solid 4px transparent'
+                            border: color.active ? 'solid 4px green' : 'solid 4px transparent'
                         }}/>
                         <input type='file' onChange={(e) => {
                             const {files} = e.target;
@@ -124,7 +148,7 @@ function App() {
                                     context.drawImage(img, 0, 0, 1, 1);
                                     const state = [...colors];
                                     state[index].data = context.getImageData(0, 0, 1, 1).data;
-                                    updateActiveColors(state, color);
+                                    updateActiveColors(state, a);
                                     setColors(state);
                                 }
                                 img.src = URL.createObjectURL(files[0]);
@@ -142,12 +166,33 @@ function App() {
                         onChange={e => {
                             const state = [...colors];
                             state[index].coff = e.target.value;
-                            updateActiveColors(state, color);
+                            updateActiveColors(state, a);
                             setColors(state);
                         }}
                     />}
                 </li>
             )}
+            {isInput &&
+                <li style={{margin: 15, listStyle: 'none'}}>
+                    <div style={{
+                        backgroundColor: 'green',
+                        display: 'block',
+                        borderRadius: '50%',
+                        width: 50,
+                        height: 50,
+                        border: 'solid 4px transparent',
+                        fontSize: 50,
+                        lineHeight: '40px',
+                        color: 'white'
+                    }} onClick={() => {
+                        const state = [...colors];
+                        const data = [0, 0, 0, 255];
+                        state.push({data, coff: 1});
+                        setColors(state);
+                    }
+                    }>+
+                    </div>
+                </li>}
         </ul>)
     }
 
@@ -160,13 +205,13 @@ function App() {
 
     let concentration;
 
-    const isActive = colors.filter(item => item.active);
-    if (isActive.length !== 0) {
+    const [c1, c2] = colors.filter(item => item.active);
+    if (c1) {
         const diffs = colors.map(c => c.diff);
-        const min1 = Math.min(...diffs);
-        const min2 = Math.min(...diffs.filter(item => item !== min1));
+        const min1 = diffs[colors.indexOf(c1)];
+        const min2 = diffs[colors.indexOf(c2)];
         const diff = min2 + min1;
-        concentration = colors[diffs.indexOf(min1)].coff * (min2 / diff) + colors[diffs.indexOf(min2    )].coff * (1 - min2 / diff);
+        concentration = colors[diffs.indexOf(min1)].coff * (min2 / diff) + colors[diffs.indexOf(min2)].coff * (1 - min2 / diff);
     }
 
     /*if (colors[0]) {
@@ -209,7 +254,7 @@ function App() {
                 flexWrap: 'wrap'
             }}>
                 Reference:
-                {drawColors(colors, true)}
+                {drawColors(colors, true, color)}
             </div>
             {concentration && <div>Concentration: {concentration.toFixed(2)}</div>}
         </div>
